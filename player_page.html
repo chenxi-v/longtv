@@ -1,0 +1,196 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" /> 
+    <title>正在播放</title>
+    <script src="//registry.npmmirror.com/jquery/3.5.1/files/dist/jquery.min.js"></script>
+    <script src="//registry.npmmirror.com/Base64/1.1.0/files/base64.js"></script>
+    <script src="//registry.npmmirror.com/hls.js/0.10.1/files/dist/hls.min.js"></script>
+        <style type="text/css">
+        body,html{padding:0;margin:0;background:#000;width:100%;height:100%;color:#aaa;}
+        #player{width:100%;height:100%;}
+        #loading,#error{text-align:center;padding-top:20%;font-weight: bold;font-size:16px;}
+        #timeout,#error{color:#f90;}
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <div id="tips">影片加载中，请稍候...<span id="timemsg">0</span>s</div>
+        <div id="timeout" style="display:none">服务器超时，请刷新再试</div>
+    </div>
+    <div id="player" style="display:none">
+        <div id="error" style="display:none">Sorry，加载出错，请刷新<br />如多次刷新仍无法播放，这代表资源失效了</div>
+    </div>
+    <script>
+        function HlsNoRangeLoader() {
+            Hls.DefaultConfig.loader.apply(this, arguments);
+        }
+
+        HlsNoRangeLoader.prototype = Object.create(Hls.DefaultConfig.loader.prototype);
+        HlsNoRangeLoader.prototype.constructor = HlsNoRangeLoader;
+
+        HlsNoRangeLoader.prototype.load = function (context, config, callbacks) {
+            if (context.type === 'manifest' || context.type === 'playlist') {
+                if (context.range) {
+                    delete context.range;
+                }
+            }
+
+            Hls.DefaultConfig.loader.prototype.load.call(this, context, config, callbacks);
+        };
+
+        var hlsConfig = {
+            loader: HlsNoRangeLoader
+        };
+
+        function playHLSWithCustomLoader(videoElement, url, config) {
+            if (Hls.isSupported()) {
+                var hls = new Hls(config);
+                hls.loadSource(url);
+                hls.attachMedia(videoElement);
+            } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+                videoElement.src = url;
+            } else {
+                console.error('当前浏览器不支持 HLS 播放。');
+            }
+        }
+
+        function OKOK(t){const ee = { "0Oo0o0Oo": "a", "1O0bO001": "b", "1OoCcO1": "c", "3O0dO0O3": "d", "4OoEeO4": "e", "5O0fO0O5": "f", "6OoGgO6": "g", "7O0hO0O7": "h", "8OoIiO8": "i", "9O0jO0O9": "j", "0OoKkO0": "k", "1O0lO0O1": "l", "2OoMmO2": "m", "3O0nO0O3": "n", "4OoOoO4": "o", "5O0pO0O5": "p", "6OoQqO6": "q", "7O0rO0O7": "r", "8OoSsO8": "s", "9O0tOoO9": "t", "0OoUuO0": "u", "1O0vO0O1": "v", "2OoWwO2": "w", "3O0xO0O3": "x", "4OoYyO4": "y", "5O0zO0O5": "z", "0OoAAO0": "A", "1O0BBO1": "B", "2OoCCO2": "C", "3O0DDO3": "D", "4OoEEO4": "E", "5O0FFO5": "F", "6OoGGO6": "G", "7O0HHO7": "H", "8OoIIO8": "I", "9O0JJO9": "J", "0OoKKO0": "K", "1O0LLO1": "L", "2OoMMO2": "M", "3O0NNO3": "N", "4OoOOO4": "O", "5O0PPO5": "P", "6OoQQO6": "Q", "7O0RRO7": "R", "8OoSSO8": "S", "9O0TTO9": "T", "0OoUO0": "U", "1O0VVO1": "V", "2OoWWO2": "W", "3O0XXO3": "X", "4OoYYO4": "Y", "5O0ZZO5": "Z"} ;let n="";const o=atob(t);for(let t=0;t<o.length;t++){let l=o[t];for(const[n,c]of Object.entries(ee))if(o.slice(t,t+n.length)===n){l=c,t+=n.length-1;break}n+=l}return n}
+
+        var url = "8EF5DD074A874CF97B418863F43E8D0BDE7F3C47499BCFD1F6ABCCEB6A8163C106A1D5ADAA1A610124F512EFC9461464D7931926832F95328D967EC5158858CE";
+        var t = "1772003482";
+        var key = OKOK("NDQwT28wbzBPbzk1TzBmTzBPNTU0ME9vMG8wT28yMU8wYk8wMDE1ME9vMG8wT28xOTVPMGZPME81ME9vMG8wT28wNDUwT28wbzBPbzQ0MU8wYk8wMDEzTzBkTzBPMzA5MDFPb0NjTzE3Nzk1");
+        var act = "0";
+        var play = "1";
+
+        $.post("api.php",{"url":url,"t":t,"key":key,"act":act,"play":play},function(data){
+            if(data.code == 200){
+                if(data.ext == 'link'){
+                    $("#player").html('<iframe width="100%" height="100%" src="'+data.url+'" frameborder="0" border="0" marginwidth="0" marginheight="0" scrolling="no" allowfullscreen="allowfullscreen" mozallowfullscreen="mozallowfullscreen" msallowfullscreen="msallowfullscreen" oallowfullscreen="oallowfullscreen" webkitallowfullscreen="webkitallowfullscreen" style="position: relative;z-index: 9999999;"></iframe>');
+                }else{
+                    if(data.referer == 'never'){$('head').append('<meta name="referrer" content="never">');}
+                    var isiPad = navigator.userAgent.match(/iPad|iPhone|Android|Linux|iPod/i) != null;
+                    var url = data.url;
+                    var m3u8Regex = /\.m3u8/i;
+                    var isHLS = url && typeof url === 'string' && m3u8Regex.test(url);
+                    var videoID = "c085f4ae7fb0f0f980a24849351541db";
+                    var storageKey = 'time_' + videoID; 
+                    var lastSavedTime = 0;
+                    var saveInterval = 5;
+
+
+                    if (isiPad) {
+                        $('#player').html('<video src="" controls="controls" preload="preload" webkit-playsinline="true" x5-video-player-type="h5" playsinline="true" x5-playsinline="true" width="100%" height="100%" poster="https://g.gtimg.cn/music/photo_new/T053XD010029cguz3t5xq3.gif" id="h5player"></video>');
+                        
+                        var h5player = document.getElementById('h5player');
+                        
+                        if (isHLS) {
+                            playHLSWithCustomLoader(h5player, url, hlsConfig); 
+                        } else {
+                            h5player.src = url;
+                        }
+                        
+                        h5player.addEventListener('canplay', function() {
+                            if (this.hasAttemptedSeek) return;
+                            const savedTimeStr = localStorage.getItem(storageKey); 
+                            const savedTime = parseFloat(savedTimeStr);
+                            if (!isNaN(savedTime) && savedTime > 1) {
+                                this.currentTime = savedTime;
+                                lastSavedTime = savedTime;
+                                this.hasAttemptedSeek = true;
+                            } else {
+                                this.hasAttemptedSeek = true;
+                            }
+                        });
+
+                        h5player.addEventListener('timeupdate', function() {
+                            const currentTime = this.currentTime;
+                            if (Math.abs(currentTime - lastSavedTime) >= saveInterval) {
+                                localStorage.setItem(storageKey, currentTime.toString()); 
+                                lastSavedTime = currentTime;
+                            }
+                        });
+
+                        h5player.addEventListener('ended', function() {
+                            localStorage.removeItem(storageKey);
+                        });
+                    }else{
+                        var videoOptions = {
+                            url: url
+                        };
+
+                        if(isHLS){
+                            videoOptions.type = 'hls';
+                            videoOptions.customType = {
+                                'hls': function (video, player) {
+                                    playHLSWithCustomLoader(video, video.src, hlsConfig);
+                                }
+                            };
+                        }
+
+                        var dplayer = new DPlayer({
+                            container: document.getElementById('player'),
+                            autoplay: true,
+                            video: videoOptions
+                        });
+                        
+                        dplayer.hasAttemptedSeek = false;
+                        dplayer.on('loadeddata', function() {
+                            if (dplayer.hasAttemptedSeek) return;
+                            const savedTimeStr = localStorage.getItem(storageKey); 
+                            const savedTime = parseFloat(savedTimeStr);
+                            if (!isNaN(savedTime) && savedTime > 1) {
+                                dplayer.seek(savedTime); 
+                                lastSavedTime = savedTime; 
+                                dplayer.hasAttemptedSeek = true;
+                            } else {
+                                dplayer.hasAttemptedSeek = true;
+                            }
+                        });
+                        dplayer.on('timeupdate', function() {
+                            const currentTime = dplayer.video.currentTime; 
+                            if (Math.abs(currentTime - lastSavedTime) >= saveInterval) {
+                                localStorage.setItem(storageKey, currentTime.toString()); 
+                                lastSavedTime = currentTime;
+                            }
+                        });
+
+                        dplayer.on('ended', function() {
+                            localStorage.removeItem(storageKey);
+                        });
+
+                    }
+                }
+                $("#loading").hide();
+                $("#player").show();
+            }else{
+                if(data.msg !== 'error'){
+                    $("#error").html(data.msg);    
+                }
+                $("#loading").hide();
+                $("#player").show();
+                $("#error").show();
+            }
+        },"json");
+
+        //倒计时
+        function tipstime(count){
+            $("#timemsg").text(count);
+            if(count == 20){
+                $("#tips").hide();
+                $("#timeout").show();
+            }else{
+                count += 1;
+                setTimeout(function(){
+                    tipstime(count);
+                }, 1000);
+            }
+        }
+        tipstime(0);
+    </script>
+    
+</body>
+</html>

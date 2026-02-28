@@ -1,0 +1,31 @@
+{
+  "name": "longtv",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "artplayer": "^5.3.0",
+    "artplayer-plugin-danmuku": "^5.2.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.34.3",
+    "hls.js": "^1.6.15",
+    "lucide-react": "^0.575.0",
+    "next": "^16.1.1",
+    "particles.js": "^2.0.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "tailwind-merge": "^3.5.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
+    "@types/node": "^25.3.0",
+    "@types/react": "^19.2.14",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.9.3"
+  }
+}
