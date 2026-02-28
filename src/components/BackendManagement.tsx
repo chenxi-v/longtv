@@ -10,8 +10,23 @@ interface SpiderInfo {
   type: 'local' | 'remote';
 }
 
+const DEFAULT_BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
+
+const getBackendUrl = (): string => {
+  if (process.env.NEXT_PUBLIC_BACKEND_URL) {
+    return process.env.NEXT_PUBLIC_BACKEND_URL;
+  }
+  if (typeof window !== 'undefined') {
+    const savedUrl = localStorage.getItem('backend_url');
+    if (savedUrl) {
+      return savedUrl;
+    }
+  }
+  return DEFAULT_BACKEND_URL;
+};
+
 export default function BackendManagement() {
-  const [backendUrl, setBackendUrl] = useState('http://127.0.0.1:8000');
+  const [backendUrl, setBackendUrl] = useState(DEFAULT_BACKEND_URL);
   const [spiders, setSpiders] = useState<SpiderInfo[]>([]);
   const [newSpiderKey, setNewSpiderKey] = useState('');
   const [newSpiderName, setNewSpiderName] = useState('');
@@ -33,11 +48,18 @@ export default function BackendManagement() {
   };
 
   useEffect(() => {
-    const savedUrl = localStorage.getItem('backend_url');
-    if (savedUrl) {
-      const normalizedUrl = normalizeUrl(savedUrl);
+    const envBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+    if (envBackendUrl) {
+      const normalizedUrl = normalizeUrl(envBackendUrl);
       setBackendUrl(normalizedUrl);
       checkConnection(normalizedUrl);
+    } else {
+      const savedUrl = localStorage.getItem('backend_url');
+      if (savedUrl) {
+        const normalizedUrl = normalizeUrl(savedUrl);
+        setBackendUrl(normalizedUrl);
+        checkConnection(normalizedUrl);
+      }
     }
     fetchSpiders();
   }, []);
@@ -69,7 +91,8 @@ export default function BackendManagement() {
   };
 
   const fetchSpiders = async () => {
-    const url = normalizeUrl(localStorage.getItem('backend_url') || backendUrl);
+    const envBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+    const url = normalizeUrl(getBackendUrl());
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -189,7 +212,7 @@ export default function BackendManagement() {
     }
 
     setLoading(true);
-    const url = normalizeUrl(localStorage.getItem('backend_url') || backendUrl);
+    const url = normalizeUrl(getBackendUrl());
     try {
       const response = await fetch(`${url}/api/add-python-spider`, {
         method: 'POST',
@@ -221,7 +244,7 @@ export default function BackendManagement() {
   };
 
   const removeSpider = async (key: string) => {
-    const url = normalizeUrl(localStorage.getItem('backend_url') || backendUrl);
+    const url = normalizeUrl(getBackendUrl());
     try {
       const response = await fetch(`${url}/api/spiders/${key}`, { method: 'DELETE' });
       if (response.ok) {
@@ -247,7 +270,7 @@ export default function BackendManagement() {
     }
 
     setUploading(true);
-    const url = normalizeUrl(localStorage.getItem('backend_url') || backendUrl);
+    const url = normalizeUrl(getBackendUrl());
     try {
       const formData = new FormData();
       formData.append('file', uploadFile);
@@ -281,14 +304,14 @@ export default function BackendManagement() {
   };
 
   const copyUrl = (key: string) => {
-    const url = normalizeUrl(localStorage.getItem('backend_url') || backendUrl);
+    const url = normalizeUrl(getBackendUrl());
     const spiderUrl = `${url}/api/spider/${key}`;
     navigator.clipboard.writeText(spiderUrl);
     alert('URL已复制');
   };
 
   const getSpiderUrl = (key: string) => {
-    const url = normalizeUrl(localStorage.getItem('backend_url') || backendUrl);
+    const url = normalizeUrl(getBackendUrl());
     return `${url}/api/spider/${key}`;
   };
 
@@ -302,7 +325,7 @@ export default function BackendManagement() {
   const updateSpider = async () => {
     if (!editingSpider) return;
     
-    const url = normalizeUrl(localStorage.getItem('backend_url') || backendUrl);
+    const url = normalizeUrl(getBackendUrl());
     try {
       const response = await fetch(`${url}/api/spiders/${editingSpider.key}`, {
         method: 'PUT',
@@ -336,69 +359,30 @@ export default function BackendManagement() {
           后台服务配置
         </h3>
         
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              后台服务地址
-            </label>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                value={backendUrl}
-                onChange={(e) => setBackendUrl(e.target.value)}
-                placeholder="http://localhost:8000 或 https://your-domain.com"
-                className="flex-1 px-4 py-2 rounded-lg bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={testConnection}
-                  disabled={testingConnection}
-                  className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-50 transition-colors"
-                >
-                  {testingConnection ? (
-                    <>
-                      <RefreshCw size={16} className="animate-spin mr-2" />
-                      测试中...
-                    </>
-                  ) : '测试连接'}
-                </button>
-                <button 
-                  onClick={saveBackendUrl}
-                  className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-                >
-                  保存
-                </button>
-              </div>
-            </div>
-            <p className="mt-2 text-xs text-gray-400">
-              本地开发使用 http://localhost:8000，部署后使用实际域名
-            </p>
-            
-            <div className={`mt-4 rounded-lg p-4 border ${
+        <div className={`rounded-lg p-4 border ${
+          backendConnected 
+            ? 'bg-green-500/10 border-green-500/30' 
+            : 'bg-red-500/10 border-red-500/30'
+        }`}>
+          <div className="flex items-center gap-3">
+            <div className={`w-3 h-3 rounded-full ${
               backendConnected 
-                ? 'bg-green-500/10 border-green-500/30' 
-                : 'bg-red-500/10 border-red-500/30'
-            }`}>
-              <div className="flex items-center gap-3">
-                <div className={`w-3 h-3 rounded-full ${
-                  backendConnected 
-                    ? 'bg-green-500 animate-pulse' 
-                    : 'bg-red-500'
-                }`}></div>
-                <div>
-                  <p className={`font-medium ${
-                    backendConnected 
-                      ? 'text-green-400' 
-                      : 'text-red-400'
-                  }`}>
-                    {backendConnected ? '✓ 成功连接后端' : '✗ 未连接后端'}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {backendConnected 
-                      ? `当前连接: ${backendUrl}` 
-                      : '请配置后台服务地址并测试连接'}
-                  </p>
-                </div>
-              </div>
+                ? 'bg-green-500 animate-pulse' 
+                : 'bg-red-500'
+            }`}></div>
+            <div>
+              <p className={`font-medium ${
+                backendConnected 
+                  ? 'text-green-400' 
+                  : 'text-red-400'
+              }`}>
+                {backendConnected ? '✓ 成功连接后端' : '✗ 未连接后端'}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                {backendConnected 
+                  ? `当前连接: ${backendUrl}` 
+                  : '后端服务不可用，请检查网络或联系管理员'}
+              </p>
             </div>
           </div>
         </div>

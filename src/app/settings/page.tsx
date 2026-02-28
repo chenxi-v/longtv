@@ -49,6 +49,11 @@ export default function SettingsPage() {
     if (proxyStored) {
       setProxySettings(JSON.parse(proxyStored));
     }
+    
+    const tabStored = localStorage.getItem('settings_selectedTab');
+    if (tabStored) {
+      setSelectedTab(tabStored);
+    }
   }, []);
 
   useEffect(() => {
@@ -67,6 +72,10 @@ export default function SettingsPage() {
     updateIndicator();
     window.addEventListener('resize', updateIndicator);
     return () => window.removeEventListener('resize', updateIndicator);
+  }, [selectedTab]);
+
+  useEffect(() => {
+    localStorage.setItem('settings_selectedTab', selectedTab);
   }, [selectedTab]);
 
   const saveToLocalStorage = (sources: VideoSource[]) => {

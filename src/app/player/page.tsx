@@ -32,6 +32,9 @@ interface VideoSource {
 }
 
 const getBackendUrl = (): string => {
+  if (process.env.NEXT_PUBLIC_BACKEND_URL) {
+    return process.env.NEXT_PUBLIC_BACKEND_URL.replace(/localhost/g, '127.0.0.1');
+  }
   if (typeof window === 'undefined') return 'http://127.0.0.1:8000';
   const stored = localStorage.getItem('backend_url');
   if (stored) {
